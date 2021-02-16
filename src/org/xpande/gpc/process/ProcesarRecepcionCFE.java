@@ -7,23 +7,17 @@ import org.compiere.process.SvrProcess;
 import org.xpande.gpc.model.MZGPCCFEConfig;
 import org.xpande.gpc.model.MZGPCCFEConfigBP;
 
-//import org.xpande.pluscons.model.MZGPCAttachConf;
-//import org.xpande.pluscons.model.MZGPCAttachConfRem;
-
 import javax.mail.*;
 import javax.mail.internet.MimeBodyPart;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.nio.file.*;
 
 /**
- * Proceso para copia de adjuntos.
  * Product: Adempiere ERP & CRM Smart Business Solution. Localization : Uruguay - Xpande
- * Xpande. Created by Gabriel Vila on 11/2/20.
+ * Xpande. Created by Gabriel Vila on 2/15/21.
  */
-public class CopiarAdjuntos extends SvrProcess {
+public class ProcesarRecepcionCFE extends SvrProcess {
 
     private MZGPCCFEConfig mzgpccfeConfig = null;
 
