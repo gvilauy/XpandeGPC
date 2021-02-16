@@ -71,7 +71,7 @@ public class ProcesarRecepcionCFE extends SvrProcess {
             for (MZGPCCFEConfigBP configBP: configBPList){
 
                 IMAPStore emailStore = (IMAPStore) emailSession.getStore("imaps");
-                emailStore.connect(eMailConfig.getSMTPHost(), configBP.getEMail(), configBP.getEMailUserPW());
+                emailStore.connect(eMailConfig.getSMTPHost(), configBP.getEMailRecipient(), configBP.getEMailUserPW());
 
                 //3) create the folder object and open it
                 Folder emailFolder = emailStore.getFolder("INBOX");
@@ -128,11 +128,14 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                             if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
 
                                 String fileName = part.getFileName();
-                                part.saveFile("C:\\Adempiere\\emails\\" + fileName);
+                                //String filePathName = "C:\\Adempiere\\emails\\" + fileName
+                                String filePathName = "/tmp/" + fileName;
+
+                                part.saveFile(filePathName);
 
                                 if (fileName.endsWith(".zip")){
 
-                                    ZipInputStream zis = new ZipInputStream(new FileInputStream(fileName));
+                                    ZipInputStream zis = new ZipInputStream(new FileInputStream(filePathName));
                                     ZipEntry entry = zis.getNextEntry();
                                     while (null != (entry=zis.getNextEntry()) ){
                                         System.out.println(entry.getName());
