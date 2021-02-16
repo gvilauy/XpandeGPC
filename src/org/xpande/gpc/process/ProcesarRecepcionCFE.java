@@ -9,9 +9,12 @@ import org.xpande.gpc.model.MZGPCCFEConfigBP;
 
 import javax.mail.*;
 import javax.mail.internet.MimeBodyPart;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Product: Adempiere ERP & CRM Smart Business Solution. Localization : Uruguay - Xpande
@@ -79,7 +82,10 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                 if ((backupFolder == null) || (!backupFolder.exists())){
                     backupFolder = emailStore.getFolder(backupFolderName);
                     if ((backupFolder == null) || (!backupFolder.exists())){
-                        return "No se encontró la carpeta de respaldo de correo : " + backupFolderName;
+                        if (backupFolder.create(Folder.HOLDS_MESSAGES)) {
+                            backupFolder.setSubscribed(true);
+                            System.out.println("Folder was created successfully");
+                        }
                     }
                 }
 
@@ -88,7 +94,10 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                 if ((errorFolder == null) || (!errorFolder.exists())){
                     errorFolder = emailStore.getFolder(errorFolderName);
                     if ((errorFolder == null) || (!errorFolder.exists())){
-                        return "No se encontró la carpeta para mails no procesados : " + errorFolderName;
+                        if (errorFolder.create(Folder.HOLDS_MESSAGES)) {
+                            errorFolder.setSubscribed(true);
+                            System.out.println("Folder was created successfully");
+                        }
                     }
                 }
 
@@ -123,7 +132,11 @@ public class ProcesarRecepcionCFE extends SvrProcess {
 
                                 if (fileName.endsWith(".zip")){
 
-
+                                    ZipInputStream zis = new ZipInputStream(new FileInputStream(fileName));
+                                    ZipEntry entry = zis.getNextEntry();
+                                    while (null != (entry=zis.getNextEntry()) ){
+                                        System.out.println(entry.getName());
+                                    }
 
                                 }
                                 else if (fileName.endsWith(".xml")){
