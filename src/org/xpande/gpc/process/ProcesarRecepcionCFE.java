@@ -10,6 +10,7 @@ import org.xpande.gpc.model.MZGPCCFEConfigBP;
 import javax.mail.*;
 import javax.mail.internet.MimeBodyPart;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -128,17 +129,30 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                             if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
 
                                 String fileName = part.getFileName();
-                                //String filePathName = "C:\\Adempiere\\emails\\" + fileName
-                                String filePathName = "/tmp/" + fileName;
+                                String filePathName = "C:\\Adempiere\\emails\\" + fileName;
+//                                String filePathName = "/tmp/" + fileName;
 
                                 part.saveFile(filePathName);
 
                                 if (fileName.endsWith(".zip")){
 
-                                    ZipInputStream zis = new ZipInputStream(new FileInputStream(filePathName));
-                                    ZipEntry entry = zis.getNextEntry();
-                                    while (null != (entry=zis.getNextEntry()) ){
+                                    ZipInputStream zip = new ZipInputStream(new FileInputStream(filePathName));
+                                    ZipEntry entry;
+
+                                    while (null != (entry=zip.getNextEntry()) ){
                                         System.out.println(entry.getName());
+
+                                        if (entry.getName().endsWith(".xml")){
+                                            System.out.println("Encontramos un archivo .xml");
+                                        }
+                                        /*FileOutputStream fos = new FileOutputStream(entry.getName());
+                                        int leido;
+                                        byte [] buffer = new byte[1024];
+                                        while (0<(leido=zip.read(buffer))){
+                                            fos.write(buffer,0,leido);
+                                        }
+                                        fos.close();*/
+                                        zip.closeEntry();
                                     }
 
                                 }
@@ -166,6 +180,7 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                             }
                         }
                     }
+                    messagesProcessedList.add(message);
                 }
 
                 // Copio mensajes procesados a folder de backup
