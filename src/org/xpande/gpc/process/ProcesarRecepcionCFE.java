@@ -1,16 +1,22 @@
 package org.xpande.gpc.process;
 
 import com.sun.mail.imap.IMAPStore;
+import oasis.names.specification.ubl.schema.xsd.attacheddocument_2.AttachedDocumentType;
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MEMailConfig;
 import org.compiere.process.SvrProcess;
 import org.xpande.gpc.model.MZGPCCFEConfig;
 import org.xpande.gpc.model.MZGPCCFEConfigBP;
+import uy.gub.dgi.cfe.EnvioCFEEntreEmpresas;
 
 import javax.mail.*;
 import javax.mail.internet.MimeBodyPart;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -129,8 +135,8 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                             if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
 
                                 String fileName = part.getFileName();
-                                String filePathName = "C:\\Adempiere\\emails\\" + fileName;
-//                                String filePathName = "/tmp/" + fileName;
+                                //String filePathName = "C:\\Adempiere\\emails\\" + fileName;
+                                String filePathName = "/tmp/" + fileName;
 
                                 part.saveFile(filePathName);
 
@@ -142,22 +148,27 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                                     while (null != (entry=zip.getNextEntry()) ){
                                         System.out.println(entry.getName());
 
+                                        String xmlFilePathName = "/tmp/" + entry.getName().trim();
+
                                         if (entry.getName().endsWith(".xml")){
                                             System.out.println("Encontramos un archivo .xml");
+                                            FileOutputStream fos = new FileOutputStream(xmlFilePathName);
+                                            int leido;
+                                            byte [] buffer = new byte[1024];
+                                            while (0<(leido=zip.read(buffer))){
+                                                fos.write(buffer,0,leido);
+                                            }
+                                            fos.close();
+
+                                            this.getXMLInfo(xmlFilePathName);
                                         }
-                                        /*FileOutputStream fos = new FileOutputStream(entry.getName());
-                                        int leido;
-                                        byte [] buffer = new byte[1024];
-                                        while (0<(leido=zip.read(buffer))){
-                                            fos.write(buffer,0,leido);
-                                        }
-                                        fos.close();*/
                                         zip.closeEntry();
                                     }
 
                                 }
                                 else if (fileName.endsWith(".xml")){
 
+                                    this.getXMLInfo(filePathName);
                                 }
 
 
@@ -204,6 +215,7 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                     errorFolder.close(true);
                 }
 
+                /*
                 // Abro de nuevo inbox y borro los mensajes
                 emailFolder.open(Folder.READ_WRITE);
                 for (int i = 0; i < messages.length; i++) {
@@ -211,6 +223,7 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                     message.setFlag(Flags.Flag.DELETED, true);
                 }
                 emailFolder.close(true);
+                */
 
                 emailStore.close();
             }
@@ -221,6 +234,29 @@ public class ProcesarRecepcionCFE extends SvrProcess {
         }
 
         return null;
+    }
+
+
+    private void getXMLInfo(String xmlFileName){
+
+        try{
+
+            File fileCFEXml = new File(xmlFileName);
+
+            //OutputStream out = new FileOutputStream(fileCFEXml);
+            //out.close();
+
+            JAXBContext jaxbContext = JAXBContext.newInstance(AttachedDocumentType.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+            AttachedDocumentType attachedDocumentType = (AttachedDocumentType) jaxbUnmarshaller.unmarshal(fileCFEXml);
+
+            System.out.println("Vamossss");
+
+        }
+        catch (Exception e){
+            throw new AdempiereException(e);
+        }
     }
 
 }
