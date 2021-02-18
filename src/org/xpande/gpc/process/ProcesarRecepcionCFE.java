@@ -7,7 +7,6 @@ import org.compiere.model.MEMailConfig;
 import org.compiere.process.SvrProcess;
 import org.xpande.gpc.model.MZGPCCFEConfig;
 import org.xpande.gpc.model.MZGPCCFEConfigBP;
-import uy.gub.dgi.cfe.EnvioCFEEntreEmpresas;
 
 import javax.mail.*;
 import javax.mail.internet.MimeBodyPart;
@@ -16,7 +15,10 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -138,7 +140,6 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                                 String tempDir = System.getProperty(property);
 
                                 String fileName = part.getFileName();
-                                //String filePathName = "C:\\Adempiere\\emails\\" + fileName;
                                 String filePathName = tempDir + fileName;
 
                                 part.saveFile(filePathName);
@@ -163,34 +164,15 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                                             }
                                             fos.close();
 
-                                            this.getXMLInfo(xmlFilePathName);
+                                            this.getXMLInfo(xmlFilePathName, configBP, filePathName);
                                         }
                                         zip.closeEntry();
                                     }
 
                                 }
                                 else if (fileName.endsWith(".xml")){
-
-                                    this.getXMLInfo(filePathName);
+                                    this.getXMLInfo(filePathName, configBP, null);
                                 }
-
-
-
-                                /*
-                                File fileAdjunto = new File("C:\\Adempiere\\emails\\" + fileName);
-
-                                Path sourcePath = Paths.get("C:\\Adempiere\\emails\\" + fileName);
-                                //Path targetPath = Paths.get("C:\\Adempiere\\emails\\dest\\" + fileName);
-                                Path targetPath = Paths.get(attachConfRem.getFolder().trim() + fileName);
-
-                                try{
-                                    Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                                    messagesProcessedList.add(message);
-                                }
-                                catch (Exception e){
-                                    messagesErrorsList.add(message);
-                                }
-                                */
                             }
                         }
                     }
@@ -239,22 +221,47 @@ public class ProcesarRecepcionCFE extends SvrProcess {
         return null;
     }
 
-
-    private void getXMLInfo(String xmlFileName){
+    /***
+     * Valida archivo xml contra schema de la DIAN (xsd).
+     * Copia archivo en carpeta destino según sea válido o no.
+     * Xpande. Created by Gabriel Vila on 2/18/21.
+     * @param xmlFileName
+     * @param configBP
+     * @param zipFileName
+     */
+    private void getXMLInfo(String xmlFileName, MZGPCCFEConfigBP configBP, String zipFileName){
 
         try{
 
             File fileCFEXml = new File(xmlFileName);
-
-            //OutputStream out = new FileOutputStream(fileCFEXml);
-            //out.close();
-
             JAXBContext jaxbContext = JAXBContext.newInstance(AttachedDocumentType.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-            AttachedDocumentType attachedDocumentType = (AttachedDocumentType) jaxbUnmarshaller.unmarshal(fileCFEXml);
+            // Abro xml contra schema de la DIAN para saber si es válido o no.
+            boolean archivoValido = true;
+            try{
+                AttachedDocumentType attachedDocumentType = (AttachedDocumentType) jaxbUnmarshaller.unmarshal(fileCFEXml);
+            }
+            catch (Exception e){
+                archivoValido = false;
+            }
 
-            System.out.println("Vamossss");
+            // Carpeta destino según sea válido o no.
+            String pathDestino = configBP.getFolderOk();
+            if (!archivoValido){
+                pathDestino = configBP.getFolderError();
+            }
+
+            // Archivo destino xml o zip
+            File archivoDestino = fileCFEXml;
+            if (zipFileName != null){
+                archivoDestino = new File((zipFileName));
+            }
+
+            // Copio archivo destino en carpeta destino
+            Path sourcePath = Paths.get(archivoDestino.getPath());
+            Path targetPath = Paths.get(pathDestino + archivoDestino.getName());
+            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
 
         }
         catch (Exception e){
