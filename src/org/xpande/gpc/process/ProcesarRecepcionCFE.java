@@ -200,7 +200,7 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                     errorFolder.close(true);
                 }
 
-                /*
+
                 // Abro de nuevo inbox y borro los mensajes
                 emailFolder.open(Folder.READ_WRITE);
                 for (int i = 0; i < messages.length; i++) {
@@ -208,7 +208,7 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                     message.setFlag(Flags.Flag.DELETED, true);
                 }
                 emailFolder.close(true);
-                */
+
 
                 emailStore.close();
             }
