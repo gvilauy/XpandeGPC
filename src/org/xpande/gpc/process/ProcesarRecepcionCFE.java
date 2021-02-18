@@ -134,9 +134,12 @@ public class ProcesarRecepcionCFE extends SvrProcess {
                             // Si esta parte leida es un adjunto
                             if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
 
+                                String property = "java.io.tmpdir";
+                                String tempDir = System.getProperty(property);
+
                                 String fileName = part.getFileName();
                                 //String filePathName = "C:\\Adempiere\\emails\\" + fileName;
-                                String filePathName = "/tmp/" + fileName;
+                                String filePathName = tempDir + fileName;
 
                                 part.saveFile(filePathName);
 
